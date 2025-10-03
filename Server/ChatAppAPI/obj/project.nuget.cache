@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "lqE8e9zJTj4=",
+  "dgSpecHash": "8fpNaaaYJCA=",
   "success": true,
-  "projectFilePath": "C:\\Users\\danil\\source\\repos\\ChatAppAPI\\ChatAppAPI\\ChatAppAPI.csproj",
+  "projectFilePath": "C:\\Users\\danil\\ChattApp\\Server\\ChatAppAPI\\ChatAppAPI.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\danil\\.nuget\\packages\\microsoft.aspnetcore.openapi\\9.0.3\\microsoft.aspnetcore.openapi.9.0.3.nupkg.sha512",
     "C:\\Users\\danil\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\8.0.0\\microsoft.extensions.dependencyinjection.abstractions.8.0.0.nupkg.sha512",
