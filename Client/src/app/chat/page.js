@@ -1,198 +1,38 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react'
-import * as signalR from "@microsoft/signalr";
+import React from 'react';
 import ChatBubble from '../components/ChatBubble';
 import CurrentUserChatBubble from '../components/CurrentUserChatBubble';
-import { jwtDecode } from "jwt-decode";
-import DOMPurify from 'dompurify';
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext';
+import { useChat } from '../contexts/ChatContext';
 import ProtectedRoute from '../components/ProtectedRoute';
 import GroupList from '../components/GroupList';
-import axios from 'axios';
 
 const Page = () => {
   const auth = useAuth();
-  const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState([]);
-  const [connection, setConnection] = useState(null);
-  const [activeGroup, setActiveGroup] = useState({id: "global", name: "Global"});
-  const [addMembersList, setAddMembersList] = useState([]);
-  const [showAddMembers, setShowAddMembers] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [availableUsers, setAvailableUsers] = useState([]);
+  const {
+    message,
+    setMessage,
+    messages,
+    activeGroup,
+    addMembersList,
+    showAddMembers,
+    searchTerm,
+    setSearchTerm,
+    groups,
+    activeUser,
+    activeUserId,
+    setShowAddMembers,
+    setAddMembersList,
+    sendMessage,
+    confirmAddMembers,
+    getGroupMessages,
+    addMemberToList,
+  } = useChat();
 
-  const activeGroupRef = useRef({id: "global", name: "Global"});
-  const connectionRef = useRef(null);
-
-  const [activeUser, setActiveUser] = useState(() => {
-    const token = sessionStorage.getItem("accessToken");
-    if (token) {
-      const decoded = jwtDecode(token);
-      return decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"];
-    }
-    return "";
-  });
-
-  const [activeUserId, setActiveUserId] = useState(() => {
-    const token = sessionStorage.getItem("accessToken");
-    if (token) {
-      const decoded = jwtDecode(token);
-      return decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
-    }
-    return "";
-  });
-
-  const [groups, setGroups] = useState([]);
-
-  useEffect(() => {
-    activeGroupRef.current = activeGroup;
-  }, [activeGroup]);
-
-  const SendMessage = async () => {  
-    try {
-      await connection.invoke("SendMessageToGroup", activeGroup.id, activeUser, activeUserId, message);
-      setMessage("");
-    } catch (err) {
-      console.error("Send to group error:", err);
-    }
-  }
-
-
-
-  const confirmAddMembers = async () => {
-    try {
-      const requestBody = {
-        GroupId: activeGroupRef.current.id,
-        UserNames: addMembersList
-      };
-      await axios.post(
-        `https://localhost:5242/api/group/add-members`,
-        requestBody,
-        {
-          
-          headers: { 'Authorization': `Bearer ${sessionStorage.getItem("accessToken")}`,
-            'Content-Type': 'application/json' }
-        }
-      );
-      console.log("Members added:", addMembersList);
-      setShowAddMembers(false);
-      setAddMembersList([]);
-    } catch (error) {
-      console.error("Error adding members:", error);
-    }
-  }
-
-  const getGroupMessages = async (paramGroup) => {
-    if (activeGroup.id !== paramGroup.id) {
-      try {
-        await connection.invoke("LeaveGroup", activeGroup.id);
-        console.log("Left group:", activeGroup.id);
-      } catch (error) {
-        console.error("Leave group error:", error);
-      }
-    }
-
-    setActiveGroup(paramGroup);
-    console.log("Selected group:", paramGroup);
-
-    try {
-      const response = await axios.get(
-        `https://localhost:5242/api/group/messages/${paramGroup.id}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${sessionStorage.getItem("accessToken")}`
-          }
-        }
-      );
-
-      console.log("Messages fetched for group:", response.data);
-      const normalizedMessages = response.data.map(msg => ({
-        user: DOMPurify.sanitize(msg.senderUsername || msg.user),
-        text: DOMPurify.sanitize(msg.text),
-        senderId: msg.senderId,
-        timestamp: msg.timestamp,
-      }));
-
-      await connection.invoke("JoinGroup", paramGroup.id);
-      console.log("Joined group:", paramGroup.id);
-
-      setMessages(normalizedMessages);
-    } catch (error) {
-      console.error("Error fetching messages for group:", error);
-    }
-  }
-
-  useEffect(() => {
-    const conn = new signalR.HubConnectionBuilder()
-      .withUrl("https://localhost:5242/chatHub")
-      .withAutomaticReconnect()
-      .build();
-  
-    conn.on("ReceiveMessage", (user, msg, userId, groupId) => {
-      const sanitizedMSG = DOMPurify.sanitize(msg);
-      const sanitizedUser = DOMPurify.sanitize(user);
-      
-      console.log("Message received:", { user: sanitizedUser, groupId });
-      
-      if(activeGroupRef.current && activeGroupRef.current.id === groupId) {
-        setMessages(prev => [...prev, {
-          user: sanitizedUser,
-          text: sanitizedMSG,
-          senderId: userId,
-          timestamp: new Date(),
-          id: `${userId}-${Date.now()}`
-        }]);
-      }
-    });
-
-    conn.onreconnected(() => {
-      console.log("Reconnected to hub");
-      if (activeGroupRef.current) {
-        conn.invoke("JoinGroup", activeGroupRef.current.id);
-      }
-    });
-
-    conn.start()
-      .then(() => {
-        console.log("Connected to hub");
-        return conn.invoke("JoinGroup", "global");
-      })
-      .then(() => {
-        console.log("Joined global group");
-        setConnection(conn);
-        connectionRef.current = conn;
-      })
-      .catch(err => {
-        console.error("SignalR connection error:", err);
-      });
-
-    return () => {
-      if (connectionRef.current) {
-        if (activeGroupRef.current) {
-          connectionRef.current.invoke("LeaveGroup", activeGroupRef.current.id)
-            .catch(err => console.error("Error leaving group:", err));
-        }
-        connectionRef.current.stop();
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    const fetchGroups = async () => {
-      try {
-        const response = await axios.get('https://localhost:5242/api/group', {
-          headers: {
-            'Authorization': `Bearer ${sessionStorage.getItem("accessToken")}`
-          }
-        });
-        console.log("Groups fetched:", response.data);
-        setGroups([{ id: "global", name: "Global" }, ...response.data]);
-      } catch (error) {
-        console.error("Error fetching groups:", error);
-      }
-    };
-    fetchGroups();
-  }, []);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    sendMessage();
+  };
 
   return (
     <ProtectedRoute>
@@ -212,7 +52,7 @@ const Page = () => {
             <div className='w-full h-[600px] bg-blue-950 rounded-lg shadow-2xl flex flex-col'>
               <button
                 className='self-start m-4 bg-green-500 hover:bg-green-600 text-black font-semibold px-4 py-2 rounded-lg transition-colors'
-                onClick={setShowAddMembers}
+                onClick={() => setShowAddMembers(true)}
               >
                 Add Members
               </button>
@@ -240,10 +80,7 @@ const Page = () => {
                 )}
               </div>
 
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                SendMessage();
-              }} className='p-4 bg-blue-900 rounded-b-lg'>
+              <form onSubmit={handleSubmit} className='p-4 bg-blue-900 rounded-b-lg'>
                 <div className='flex gap-2'>
                   <input
                     type='text'
@@ -286,23 +123,18 @@ const Page = () => {
                 ))}
               </div>             
                      
-                  
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => {
                     setShowAddMembers(false);
                     setAddMembersList([]);
-
                   }}
                   className="bg-blue-950 hover:bg-gray-500 text-white px-4 py-2 rounded-lg"
                 >
                   Cancel
                 </button>
-                 <button
-                  onClick={() => { 
-                    setAddMembersList([...addMembersList, searchTerm]);
-                    setSearchTerm('');
-                  }}
+                <button
+                  onClick={addMemberToList}
                   className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
                 >
                   Add

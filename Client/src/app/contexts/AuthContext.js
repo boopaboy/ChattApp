@@ -12,6 +12,9 @@ export const AuthProvider = ({ children }) => {
     const defaultValues = { accessToken: null, isAuthenticated: false };
     const [auth, setAuth] = useState(defaultValues);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [activeUserName, setActiveUserName] = useState('');
+    const [activeUserId, setActiveUserId] = useState('');
 
 
     const signUp = async (email, username, password) => {
@@ -25,6 +28,9 @@ export const AuthProvider = ({ children }) => {
                     accessToken: response.data.token,
                     isAuthenticated: true,
                 });
+                setActiveUserId(jwtDecode(response.data.token)["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"]);
+                setActiveUserName(jwtDecode(response.data.token)["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"]);
+                
                 return true;
             }
             return false;
@@ -111,6 +117,12 @@ export const AuthProvider = ({ children }) => {
             signIn,
             signUp,
             signOut,
+            error,
+            setError,
+            activeUserName,
+            setActiveUserName,
+            activeUserId,
+            setActiveUserId,
             loading,
 
         }}>

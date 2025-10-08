@@ -1,7 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { motion, useInView } from 'motion/react';
-import axios from 'axios';
-
+import { useChat } from '../contexts/ChatContext';
 const AnimatedItem = ({ children, delay = 0, index, onMouseEnter, onClick }) => {
     const ref = useRef(null);
     const inView = useInView(ref, { amount: 0.5, triggerOnce: false });
@@ -37,6 +36,8 @@ const GroupList = ({
     const [topGradientOpacity, setTopGradientOpacity] = useState(0);
     const [bottomGradientOpacity, setBottomGradientOpacity] = useState(1);
     const [showModal, setShowModal] = useState(false);
+    const {createGroup,} = useChat();
+
 
     const openModal = () => {
         setShowModal(true);
@@ -102,24 +103,10 @@ const GroupList = ({
 
     const [groupName, setGroupName] = useState('');
 
-    const createGroup = () => {
-        console.log("Creating group:", groupName);
-        axios.post('https://localhost:5242/api/group',`"${groupName}"`,
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${sessionStorage.getItem("accessToken")}`
-                }
-            }).then(response => {
-                console.log("Group created:", response.data);
-                setGroupName('');
-            }
-        ).catch(error => {
-            console.error("Error creating group:", error);
-        });
+    const handleCreateGroup = (groupName) => {
+       createGroup(groupName);
+       closeModal();
 
-
-    closeModal();
     }
 
     return (
@@ -192,7 +179,7 @@ const GroupList = ({
                     </div>
                     <button
                         className="bg-blue-800 hover:bg-blue-700 text-white p-1 w-full h-[70px] shadow-lg transition-opacity duration-300 ease cursor-pointer rounded-lg items-end"
-                        onClick={createGroup}
+                        onClick={ () => handleCreateGroup(groupName)}
                     >
                         Add Group
                     </button>

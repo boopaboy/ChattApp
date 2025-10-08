@@ -8,15 +8,33 @@ namespace ChatAppAPI.Contexts
         public UserContext(DbContextOptions<UserContext> options)
             : base(options)
         {
-
         }
 
         public DbSet<User> Users { get; set; }
         public DbSet<GroupChat> GroupChats { get; set; }
         public DbSet<GroupMember> GroupMembers { get; set; }
         
-           protected override void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Fix for SQLite string type issues
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                foreach (var property in entityType.GetProperties())
+                {
+                    if (property.ClrType == typeof(string))
+                    {
+                        // For SQLite, convert all string types to TEXT
+                        if (property.GetColumnType() == null || 
+                            property.GetColumnType().ToLower().Contains("varchar") ||
+                            property.GetColumnType().ToLower().Contains("nvarchar"))
+                        {
+                            property.SetColumnType("TEXT");
+                        }
+                    }
+                }
+            }
+
+            // Your relationship configurations
             modelBuilder.Entity<GroupMember>()
                 .HasKey(gm => new { gm.GroupChatId, gm.UserId });
 
@@ -31,5 +49,8 @@ namespace ChatAppAPI.Contexts
                 .HasForeignKey(gm => gm.UserId);
         }
 
+        // REMOVE this method if you're configuring SQLite via Dependency Injection
+        // protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        //     => optionsBuilder.UseSqlite("Data Source=Users.db");
     }
 }

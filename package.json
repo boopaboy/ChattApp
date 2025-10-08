@@ -1,0 +1,14 @@
+{
+  "name": "chattapp",
+  "version": "1.0.0",
+  "scripts": {
+    "setup": "npm run setup:frontend && npm run setup:backend",
+    "setup:frontend": "cd Client && npm install",
+    "setup:backend": "cd Server/ChatAppApi && dotnet restore",
+    "start:frontend": "cd Client && npm run dev",
+    "start:backend": "cd Server/ChatAppApi && dotnet run",
+    "dev": "start cmd /c \"npm run start:backend\" && npm run start:frontend",
+    "build:frontend": "cd Client && npm run build",
+    "build:backend": "cd Server/ChatAppApi && dotnet build"
+  }
+}
