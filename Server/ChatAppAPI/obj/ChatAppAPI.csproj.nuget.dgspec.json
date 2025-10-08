@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\danil\\ChattApp\\Server\\ChatAppAPI\\ChatAppAPI.csproj": {}
+    "C:\\Users\\danil\\ChattApp\\server\\chatappapi\\ChatAppAPI.csproj": {}
   },
   "projects": {
-    "C:\\Users\\danil\\ChattApp\\Server\\ChatAppAPI\\ChatAppAPI.csproj": {
+    "C:\\Users\\danil\\ChattApp\\server\\chatappapi\\ChatAppAPI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\danil\\ChattApp\\Server\\ChatAppAPI\\ChatAppAPI.csproj",
+        "projectUniqueName": "C:\\Users\\danil\\ChattApp\\server\\chatappapi\\ChatAppAPI.csproj",
         "projectName": "ChatAppAPI",
-        "projectPath": "C:\\Users\\danil\\ChattApp\\Server\\ChatAppAPI\\ChatAppAPI.csproj",
+        "projectPath": "C:\\Users\\danil\\ChattApp\\server\\chatappapi\\ChatAppAPI.csproj",
         "packagesPath": "C:\\Users\\danil\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\danil\\ChattApp\\Server\\ChatAppAPI\\obj\\",
+        "outputPath": "C:\\Users\\danil\\ChattApp\\server\\chatappapi\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -51,6 +51,14 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
+            "BCrypt.Net-Next": {
+              "target": "Package",
+              "version": "[4.0.3, )"
+            },
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[9.0.9, )"
+            },
             "Microsoft.AspNetCore.OpenApi": {
               "target": "Package",
               "version": "[9.0.3, )"
@@ -74,6 +82,10 @@
             "Microsoft.IdentityModel.Tokens": {
               "target": "Package",
               "version": "[8.14.0, )"
+            },
+            "MongoDB.Driver": {
+              "target": "Package",
+              "version": "[3.5.0, )"
             },
             "System.IdentityModel.Tokens.Jwt": {
               "target": "Package",
